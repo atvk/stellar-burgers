@@ -1,30 +1,26 @@
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
-import { useParams, redirect } from 'react-router-dom';
-import { useAppSelector } from '../../services/store';
-import {
-  selectOrders,
-  selectIngredients
-} from '../../slices/stellarBurgerSlice';
+import { useSelector, useDispatch } from '../../services/store';
+import { useParams } from 'react-router-dom';
+
+import { orderSelector } from '../../services/slices/feed/slice';
+import { ingredientsSelector } from '../../services/slices/ingredients/slice';
+import { getOrderByNumberThunk } from '../../services/slices/feed/actions';
 
 export const OrderInfo: FC = () => {
-  const params = useParams<{ number: string }>();
+  const dispatch = useDispatch();
+  const { number } = useParams();
 
-  if (!params.number) {
-    redirect('/feed');
-    return null;
-  }
+  useEffect(() => {
+    dispatch(getOrderByNumberThunk(Number(number)));
+  }, []);
 
-  const orders = useAppSelector(selectOrders);
+  const orderData = useSelector(orderSelector);
+  const ingredients = useSelector(ingredientsSelector);
 
-  const orderData = orders.find(
-    (item) => item.number === parseInt(params.number!)
-  );
-
-  const ingredients: TIngredient[] = useAppSelector(selectIngredients);
-
+  /* Готовим данные для отображения */
   const orderInfo = useMemo(() => {
     if (!orderData || !ingredients.length) return null;
 

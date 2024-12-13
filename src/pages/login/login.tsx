@@ -1,50 +1,35 @@
-import { FC, SyntheticEvent, useEffect } from 'react';
+import { FC, SyntheticEvent, useEffect, useState } from 'react';
 import { LoginUI } from '@ui-pages';
-import { fetchLoginUser, selectLoading } from '../../slices/stellarBurgerSlice';
-import { useAppDispatch, useAppSelector } from '../../services/store';
-import { useForm } from '../../hooks/useForm';
-import {
-  selectErrorText,
-  removeErrorText
-} from '../../slices/stellarBurgerSlice';
-import { Preloader } from '@ui';
-import { setCookie } from '../../utils/cookie';
+import { useDispatch, useSelector } from '../../services/store';
+import { clearErrors, errorSelector } from '../../services/slices/user/slice';
+import { loginUserThunk } from '../../services/slices/user/actions';
+import { useNavigate } from 'react-router-dom';
 
 export const Login: FC = () => {
-  const dispatch = useAppDispatch();
-  const { values, handleChange } = useForm({
-    email: '',
-    password: ''
-  });
-  const error = useAppSelector(selectErrorText);
-  const isLoading = useAppSelector(selectLoading);
+  const dispatch = useDispatch();
+  const error = useSelector(errorSelector);
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
-    dispatch(removeErrorText());
+    dispatch(clearErrors());
   }, []);
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
-    dispatch(removeErrorText());
-    dispatch(fetchLoginUser(values))
-      .unwrap()
-      .then((payload) => {
-        setCookie('accessToken', payload.accessToken);
-        localStorage.setItem('refreshToken', payload.refreshToken);
-      });
+    dispatch(loginUserThunk({ email, password }));
+    navigate('/');
   };
-
-  if (isLoading) {
-    return <Preloader />;
-  }
 
   return (
     <LoginUI
-      errorText={error}
-      email={values.email}
-      setEmail={handleChange}
-      password={values.password}
-      setPassword={handleChange}
+      errorText={error!}
+      email={email}
+      setEmail={setEmail}
+      password={password}
+      setPassword={setPassword}
       handleSubmit={handleSubmit}
     />
   );

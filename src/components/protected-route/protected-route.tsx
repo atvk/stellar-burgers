@@ -1,35 +1,38 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import {
-  selectIsAuthenticated,
-  selectIsInit
-} from '../../slices/stellarBurgerSlice';
+import { useSelector } from '../../services/store';
 import { Preloader } from '../ui/preloader';
-import { useAppSelector } from '../../services/store';
+import {
+  isAuthCheckedSelector,
+  loginUserRequestSelector
+} from '../../services/slices/user/slice';
 
 type ProtectedRouteProps = {
+  onlyUnAuth?: boolean;
   children: React.ReactElement;
-  unAuthOnly?: boolean;
 };
 
 export const ProtectedRoute = ({
-  children,
-  unAuthOnly
+  onlyUnAuth,
+  children
 }: ProtectedRouteProps) => {
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const isInit = useAppSelector(selectIsInit);
+  const isAuthChecked = useSelector(isAuthCheckedSelector);
+  const loginUserRequest = useSelector(loginUserRequestSelector);
   const location = useLocation();
 
-  if (!isInit) {
+  // В процессе подгрузки пользователя
+  if (!isAuthChecked && loginUserRequest) {
     return <Preloader />;
   }
 
-  if (!unAuthOnly && !isAuthenticated) {
+  // Нужна авторизация
+  if (!onlyUnAuth && !isAuthChecked) {
     return <Navigate replace to='/login' state={{ from: location }} />;
   }
 
-  if (unAuthOnly && isAuthenticated) {
+  // Мы авторизованы
+  if (onlyUnAuth && isAuthChecked) {
     const from = location.state?.from || { pathname: '/' };
-    return <Navigate replace to={from} />;
+    return <Navigate replace to={from} state={location} />;
   }
 
   return children;

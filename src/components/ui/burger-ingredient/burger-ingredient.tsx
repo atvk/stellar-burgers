@@ -1,4 +1,4 @@
-import { FC, memo } from 'react';
+import React, { FC, memo } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './burger-ingredient.module.css';
 
@@ -9,30 +9,17 @@ import {
 } from '@zlden/react-developer-burger-ui-components';
 
 import { TBurgerIngredientUIProps } from './type';
-import { openModal } from '../../../slices/stellarBurgerSlice';
-import { useAppDispatch } from '../../../services/store';
 
 export const BurgerIngredientUI: FC<TBurgerIngredientUIProps> = memo(
-  ({ ingredient, count, handleAdd, locationState, index }) => {
+  ({ ingredient, count, handleAdd, locationState }) => {
     const { image, price, name, _id } = ingredient;
-    const dispatch = useAppDispatch();
-
-    const onClick = () => {
-      dispatch(openModal());
-    };
 
     return (
-      <li
-        className={styles.container}
-        data-cy={
-          ingredient.type === 'bun' ? `bun_${index}` : `ingredient_${index}`
-        }
-      >
+      <li className={styles.container} data-cy={ingredient.type}>
         <Link
           className={styles.article}
           to={`/ingredients/${_id}`}
           state={locationState}
-          onClick={onClick}
         >
           {count && <Counter count={count} />}
           <img className={styles.img} src={image} alt='картинка ингредиента.' />

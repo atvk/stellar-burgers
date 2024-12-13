@@ -1,88 +1,65 @@
-import { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import '../../index.css';
 import styles from './app.module.css';
-import {
-  ConstructorPage,
-  Feed,
-  NotFound404,
-  Login,
-  Register,
-  ForgotPassword,
-  ResetPassword,
-  Profile,
-  ProfileOrders
-} from '../../pages';
+
 import {
   AppHeader,
   IngredientDetails,
   Modal,
   OrderInfo,
   ProtectedRoute
-} from '../../components';
+} from '@components';
 import {
-  closeModal,
-  fetchFeed,
-  fetchIngredients,
-  getUserThunk,
-  init,
-  selectIngredients,
-  selectIsAuthenticated,
-  selectIsModalOpened,
-  selectOrders
-} from '../../slices/stellarBurgerSlice';
-import { deleteCookie, getCookie } from '../../utils/cookie';
-import { useAppDispatch, useAppSelector } from '../../services/store';
+  ConstructorPage,
+  Feed,
+  ForgotPassword,
+  Login,
+  NotFound404,
+  Profile,
+  ProfileOrders,
+  Register,
+  ResetPassword
+} from '@pages';
+import { useEffect } from 'react';
+import { useDispatch } from '../../services/store';
+import { getIngredientsThunk } from '../../services/slices/ingredients/actions';
+import { getUserThunk } from '../../services/slices/user/actions';
 
 export const App = () => {
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
   const location = useLocation();
-  const backgroundLocation = location.state?.background;
-  const isModalOpened = useAppSelector(selectIsModalOpened);
-  const token = getCookie('accessToken');
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const ingredients = useAppSelector(selectIngredients);
-  const feed = useAppSelector(selectOrders);
+  const navigate = useNavigate();
+  const background = location.state?.background;
 
   useEffect(() => {
-    if (!isAuthenticated && token) {
-      dispatch(getUserThunk())
-        .unwrap()
-        .then(() => {
-          dispatch(init());
-        })
-        .catch((e) => {
-          deleteCookie('accessToken');
-          localStorage.removeItem('refreshToken');
-        });
-    } else {
-      dispatch(init());
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!ingredients.length) {
-      dispatch(fetchIngredients());
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!feed.length) {
-      dispatch(fetchFeed());
-    }
+    dispatch(getIngredientsThunk());
+    dispatch(getUserThunk());
   }, []);
 
   return (
     <div className={styles.app}>
       <AppHeader />
-      <Routes location={backgroundLocation || location}>
-        <Route path='*' element={<NotFound404 />} />
+      <Routes location={background}>
         <Route path='/' element={<ConstructorPage />} />
         <Route path='/feed' element={<Feed />} />
+        <Route path='/feed/:number' element={<OrderInfo />} />
+        <Route
+          path='/ingredients/:id'
+          element={
+            <>
+              <h3
+                className={`text text_type_main-large mt-30 ${styles.detailsTitle}`}
+              >
+                Детали ингредиента
+              </h3>
+              <IngredientDetails />
+            </>
+          }
+        />
         <Route
           path='/login'
           element={
-            <ProtectedRoute unAuthOnly>
+            <ProtectedRoute onlyUnAuth>
               <Login />
             </ProtectedRoute>
           }
@@ -90,7 +67,7 @@ export const App = () => {
         <Route
           path='/register'
           element={
-            <ProtectedRoute unAuthOnly>
+            <ProtectedRoute onlyUnAuth>
               <Register />
             </ProtectedRoute>
           }
@@ -98,7 +75,7 @@ export const App = () => {
         <Route
           path='/forgot-password'
           element={
-            <ProtectedRoute unAuthOnly>
+            <ProtectedRoute onlyUnAuth>
               <ForgotPassword />
             </ProtectedRoute>
           }
@@ -106,7 +83,7 @@ export const App = () => {
         <Route
           path='/reset-password'
           element={
-            <ProtectedRoute unAuthOnly>
+            <ProtectedRoute onlyUnAuth>
               <ResetPassword />
             </ProtectedRoute>
           }
@@ -127,8 +104,6 @@ export const App = () => {
             </ProtectedRoute>
           }
         />
-        <Route path='/feed/:number' element={<OrderInfo />} />
-        <Route path='/ingredients/:id' element={<IngredientDetails />} />
         <Route
           path='/profile/orders/:number'
           element={
@@ -137,19 +112,23 @@ export const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route path='*' element={<NotFound404 />} />
       </Routes>
 
-      {isModalOpened && backgroundLocation && (
+      {background && (
         <Routes>
+          <Route
+            path='/feed/:number'
+            element={
+              <Modal title={'Информация о заказе'} onClose={() => navigate(-1)}>
+                <OrderInfo />
+              </Modal>
+            }
+          />
           <Route
             path='/ingredients/:id'
             element={
-              <Modal
-                title={'Описание ингредиента'}
-                onClose={() => {
-                  dispatch(closeModal());
-                }}
-              >
+              <Modal title={'Детали ингредиента'} onClose={() => navigate(-1)}>
                 <IngredientDetails />
               </Modal>
             }
@@ -157,27 +136,7 @@ export const App = () => {
           <Route
             path='/profile/orders/:number'
             element={
-              <ProtectedRoute>
-                <Modal
-                  title={'Заказ'}
-                  onClose={() => {
-                    dispatch(closeModal());
-                  }}
-                >
-                  <OrderInfo />
-                </Modal>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path='/feed/:number'
-            element={
-              <Modal
-                title={'Заказ'}
-                onClose={() => {
-                  dispatch(closeModal());
-                }}
-              >
+              <Modal title={'Информация о заказе'} onClose={() => navigate(-1)}>
                 <OrderInfo />
               </Modal>
             }
@@ -187,3 +146,5 @@ export const App = () => {
     </div>
   );
 };
+
+export default App;

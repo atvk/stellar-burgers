@@ -1,21 +1,17 @@
 import { ProfileUI } from '@ui-pages';
 import { FC, SyntheticEvent, useEffect, useState } from 'react';
-import {
-  fetchUpdateUser,
-  selectLoading,
-  selectUser
-} from '../../slices/stellarBurgerSlice';
-import { Preloader } from '@ui';
-import { useAppSelector, useAppDispatch } from '../../services/store';
+import { useDispatch, useSelector } from '../../services/store';
+import { errorSelector, userSelector } from '../../services/slices/user/slice';
+import { updateUserThunk } from '../../services/slices/user/actions';
 
 export const Profile: FC = () => {
-  const dispatch = useAppDispatch();
-  const user = useAppSelector(selectUser);
-  const isLoading = useAppSelector(selectLoading);
+  const dispatch = useDispatch();
+  const user = useSelector(userSelector);
+  const error = useSelector(errorSelector);
 
   const [formValue, setFormValue] = useState({
-    name: user.name,
-    email: user.email,
+    name: user?.name!,
+    email: user?.email!,
     password: ''
   });
 
@@ -34,14 +30,14 @@ export const Profile: FC = () => {
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
-    dispatch(fetchUpdateUser(formValue));
+    dispatch(updateUserThunk(formValue));
   };
 
   const handleCancel = (e: SyntheticEvent) => {
     e.preventDefault();
     setFormValue({
-      name: user.name,
-      email: user.email,
+      name: user?.name!,
+      email: user?.email!,
       password: ''
     });
   };
@@ -53,10 +49,6 @@ export const Profile: FC = () => {
     }));
   };
 
-  if (isLoading) {
-    return <Preloader />;
-  }
-
   return (
     <ProfileUI
       formValue={formValue}
@@ -64,6 +56,7 @@ export const Profile: FC = () => {
       handleCancel={handleCancel}
       handleSubmit={handleSubmit}
       handleInputChange={handleInputChange}
+      updateUserError={error!}
     />
   );
 };
