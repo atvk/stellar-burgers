@@ -1,6 +1,7 @@
 import * as authTokens from '../fixtures/token.json';
 import * as orderData from '../fixtures/order.json';
 
+// Определяем селекторы как константы
 const SELECTORS = {
   bun: '[data-cy=bun]',
   main: '[data-cy=main]',
@@ -70,7 +71,7 @@ describe('Интеграционные тесты для страницы кон
       cy.get(SELECTORS.bun).first().click();
 
       cy.get(SELECTORS.modal).as('modal');
-      cy.get('@modal').should('be.visible');
+      cy.get('@modal').should('be.visible'); // Убедитесь, что модальное окно видимо
       cy.get('@modal').find(SELECTORS.closeButton).should('be.visible').click();
 
       cy.get(SELECTORS.modal).should('not.exist');
@@ -97,7 +98,7 @@ describe('Интеграционные тесты для страницы кон
       cy.intercept('POST', 'api/orders', { fixture: 'order.json' });
     });
 
-    it('Cоздания заказа', () => {
+    it('Полный прогон создания заказа', () => {
       cy.get(`${SELECTORS.bun} > .common_button`).first().click();
       cy.get(`${SELECTORS.main} > .common_button`).first().click();
       cy.get(`${SELECTORS.sauce} > .common_button`).first().click();
