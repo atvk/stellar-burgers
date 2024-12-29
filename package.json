@@ -88,7 +88,6 @@
   },
   "scripts": {
     "start": "webpack serve --mode=development",
-    "build": "react build --output public",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx ./src",
